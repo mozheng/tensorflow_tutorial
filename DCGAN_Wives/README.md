@@ -3,12 +3,12 @@
 # 快速开始
 * 训练模型
 
-  python avatar_train.py
+  python train.py （正在调试）
 
 * 图片生成
 
-  python avatar_gen.py
+  python gen.py   （正在考虑）
   
- # 其他
- 博客：http://blog.csdn.net/sinat_33741547/article/details/77871170
+ # 数据集放在上一层里面
+ ../datasets/faces/
  
