@@ -9,8 +9,10 @@
 # This file is focus on :
 #
 # ---------------------------------------
-from DCGANModel import DCGANModel
+
+from .DCGANModel import DCGANModel
 
 if __name__ == '__main__':
     avatar = DCGANModel()
     avatar.train()
+

@@ -34,41 +34,39 @@ class Wives:
         self.__image_list = self._get_images_list(self.dataset_path)
         self.all_images_sum = self.get_images_sum()
 
+        # 下面为数据预处理，图片重新裁了一下
+        self.resize_shape = (48, 48, 3)
+        self.crop = True
+        self.image_shape = self.image_shape if not self.crop else self.resize_shape
         # 这里一定要用each，all命名，否则自己就懵了。
         self.each_batch_size = 64
         self.each_batch_shape = (self.each_batch_size,) + self.image_shape
         self.all_batch_sum = self.all_images_sum // self.each_batch_size
 
-        # 下面为数据预处理，图片重新裁了一下
-        self.resize_shape = (48, 48, 3)
-        self.crop = False
-        self.image_shape = self.image_shape if not self.crop else self.resize_shape
-
 
     def _get_images_list(self, path):
-        """
-        返回图片列表
+        """Method for recording a benchmark directly.
+        #   返回图片列表
         """
         return glob.glob(os.path.join(path, self.dataset_name, "*."+self.image_extension))
 
     def get_images_sum(self):
-        """
-        返回图片的总数量
+        """Method for recording a benchmark directly.
+        #   返回图片的总数量
         """
         return len(self.__image_list)
 
     def _get_image(self, filepath):
-        """
+        """返回处理好的图像
         :param filepath: 图片的文件路径
         :return: 处理好的opencv图片格式
-        返回处理好的图像
         """
         img = cv2.imread(filepath).astype(np.float32)
-        return cv2.resize(img, self.image_shape) if self.crop else img
+        return cv2.resize(img, self.image_shape[0:2]) if self.crop else img
 
     def get_batches_iter(self):
-        """
-        每次返回一个batch的迭代器。
+        """Method for recording a benchmark directly.
+        #   每次返回一个batch的迭代器。
         """
         start = 0
         end = self.each_batch_size
@@ -81,4 +79,7 @@ class Wives:
             start += self.each_batch_size
             end += self.each_batch_size
 
+    @staticmethod
+    def save_image(image, path):
+        return cv2.imwrite(path, image)
 
