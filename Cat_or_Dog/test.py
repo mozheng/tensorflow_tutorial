@@ -1,3 +1,9 @@
-import numpy as np
+import os
+import random
 
-print(np.reshape([1,2,3,4,5,6,7,8,9,10,11,12], [-1,4]))
+
+
+path="D:/Data/DogsvsCats/train"
+make_list_file(path)
+a = load_and_shuffle_images_listfile("train.txt")
+print(a)

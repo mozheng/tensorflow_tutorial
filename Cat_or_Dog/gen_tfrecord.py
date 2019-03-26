@@ -8,32 +8,51 @@ import random
 dataset_dir = '/root/cloud_annation/pcs/100-1-0301'
 record_file = 'train.tfrecod'
 
-img_ext = {".png",
-           ".jpg",
-           ".jpeg",
-           ".PNG",
-           "JPG",
-           ".JPEG",
-        }
 
-def load_and_shuffle_images_listfile(imagesfile):
-    imageslist = open(imagesfile).writelines()
-    return random.shuffle(imageslist)
+
+class Gen_TFrecord_Factory:
+    img_ext = {".png", ".jpg", ".jpeg",
+               ".PNG", "JPG", ".JPEG"}
+    def make_list_file(self, path):
+        imageslist = []
+        for filename in os.listdir(path):
+            if (os.path.splitext(filename)[-1] in img_ext):
+                label = 0
+                if "dog" == filename.split(".")[0]:
+                    label = 1
+                imageslist.append(filename + "," + str(label)+"\n")
+        with open("train.txt","w") as f:
+            f.writelines(imageslist)
+
+    def __load_and_shuffle_images_listfile(self, imagesfile):
+        imageslist = open(imagesfile).readlines()
+        imagesandlabel =[]
+        for line in imageslist:
+            if ""== line or None == line:
+                break
+            filepath = line.split(",")[0]
+            label = int(line.rstrip('\n').split(",")[1])
+            imagesandlabel.append((filepath, label))
+        random.shuffle(imagesandlabel)
+        return imagesandlabel
+
+
 ##下面开始生成TFRecord
-
-
-with tf.python_io.TFRecordWriter(record_file) as tfrecord_writer:
-    for filename in os.listdir(dataset_dir):
-        if (os.path.splitext(filename)[-1] in img_ext):
-            image = cv2.imread(os.path.join(dataset_dir, filename))
-            example = tf.train.Example(features=tf.train.Features(feature={
-            'image_raw': tf.train.Feature(bytes_list=tf.train.BytesList(value=[np_points_clould.tobytes()])),
-            'image_heigh': tf.train.Feature(int64_list =tf.train.Int64List(value=[np.shape(np_points_clould)[0]])),
-            'image_width': tf.train.Feature(int64_list=tf.train.Int64List(value=[np.shape(np_points_clould)[0]])),
-            'image_channel': tf.train.Feature(int64_list=tf.train.Int64List(value=[np.shape(np_points_clould)[0]])),
-            'image_height': tf.train.Feature(int64_list=tf.train.Int64List(value=[np.shape(np_points_clould)[0]])),
-            }))
-            tfrecord_writer.write(example.SerializeToString())  # 序列化为字符串
+    def generate_tfrecord_file(self, imagesfile):
+        imagesandlabel = self.__load_and_shuffle_images_listfile(imagesfile)
+        with tf.python_io.TFRecordWriter(record_file) as tfrecord_writer:
+            for filename, label in imagesandlabel:
+                if ""== filename or None == filename:
+                    break
+                image = cv2.imread(os.path.join(dataset_dir, filename))
+                example = tf.train.Example(features=tf.train.Features(feature={
+                'image_raw': tf.train.Feature(bytes_list=tf.train.BytesList(value=[image.tobytes()])),
+                'image_heigh': tf.train.Feature(int64_list =tf.train.Int64List(value=[image.shape[0]])),
+                'image_width': tf.train.Feature(int64_list=tf.train.Int64List(value=[image.shape[1]])),
+                'image_channel': tf.train.Feature(int64_list=tf.train.Int64List(value=[image.shape[2]])),
+                'image_label': tf.train.Feature(int64_list=tf.train.Int64List(value=[label])),
+                }))
+                tfrecord_writer.write(example.SerializeToString())  # 序列化为字符串
 
 
 #### 下面是解析
