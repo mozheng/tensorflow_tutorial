@@ -29,6 +29,7 @@ def detect(filename,cascade_file="./lbpcascade_animeface.xml"):
 if __name__ == '__main__':
     if os.path.exists('../dataset/faces') is False:
         os.makedirs('../dataset/faces')
-    file_list = glob('imgs/*.jpg')
-    for filename in file_list:
-        detect(filename)
+
+    imagespath = "../dataset/wives"
+    for filename in os.listdir(imagespath):
+        detect(os.path.join(imagespath, filename))

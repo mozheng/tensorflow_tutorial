@@ -25,10 +25,10 @@ def download(url,filename):
         if os.path.exists(filename):
             os.remove(filename)
 
-if os.path.exists('imgs') is False:
-    os.makedirs('imgs')
+if os.path.exists('../dataset/wives/') is False:
+    os.makedirs('../dataset/wives/')
 
-start = 1
+start = 5000
 end = 8000
 for i in range(start, end+1):
     url = 'http://konachan.net/post?page=%d&tags=' % i
