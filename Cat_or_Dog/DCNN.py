@@ -10,7 +10,7 @@ tf.flags.DEFINE_bool('train', "True", "Debug mode: True/ False")
 
 
 
-def VGG_Net(batch, images):
+def VGG_Net(images):
     layers = [
         'conv1_1_64', 'relu1_1', 'conv1_2_64', 'relu1_2', 'pool1_64',
 
@@ -41,14 +41,26 @@ def VGG_Net(batch, images):
         net[name] = current
     return net
 
+
+def loss_opt_function(image_net, labels):
+    cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=image_net, labels=labels))
+    optimizer = tf.train.AdamOptimizer(learning_rate=0.5).minimize(cost)
+    return optimizer
+
 def main(unused):
     config = tf.ConfigProto(log_device_placement=True, allow_soft_placement=True)
     with tf.Graph().as_default() as graph:
         config.gpu_options.per_process_gpu_memory_fraction = 0.9  # 占用90%显存
         with tf.Session(config=config) as sess:
-            image_net = VGG_Net()
-            conv_final_layer = image_net["conv5_3"]
-            res = conv_final_layer
+            image_net = VGG_Net(images= )
+            opt = loss_opt_function(image_net['relu5_4'],labels=)
+            step = 0
+            while step < 10000:
+                step += 1
+                _, loss, acc = sess.run([opt, cost, accuracy])
+                if step % 1000 == 0:
+                    print("step:",loss, acc)
+            print("training finish!")
 
 
 
