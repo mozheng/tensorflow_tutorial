@@ -3,7 +3,10 @@ import tensorflow as tf
 
 tf.flags.DEFINE_bool('debug', 'True', 'Debug mode: True/False' )
 
-FLAGS = tf.flags.FLAGS
+FLAGS=tf.flags.FLAGS
+tf.flags.DEFINE_integer('batchsize','8','trainning batchsize')    #参数 默认值  说明
+tf.flags.DEFINE_float('learning_rate','1e-4','learning_rate')
+tf.flags.DEFINE_bool('train', "True", "Debug mode: True/ False")
 
 
 
