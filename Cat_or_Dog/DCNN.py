@@ -1,5 +1,5 @@
 import tensorflow as tf
-
+from .gen_tfrecord import Gen_TFrecord
 
 tf.flags.DEFINE_bool('debug', 'True', 'Debug mode: True/False' )
 
@@ -7,7 +7,7 @@ FLAGS = tf.flags.FLAGS
 
 
 
-def VGG_Net(images):
+def head_Net(images):
     layers = [
         'conv1_1_64', 'relu1_1', 'conv1_2_64', 'relu1_2', 'pool1_64',
 
@@ -25,39 +25,66 @@ def VGG_Net(images):
 
     current = images
     net = {}
+    channels =3
+    num = channels
     for i, name in enumerate(layers):
         layer_name = name[:4]
         if layer_name == 'conv':
-            num = int(name.split('_')[-1])
-            current = tf.nn.conv2d(input=current, filter=[num, 3, 3, 1], strides=[1, 1, 1, 1], padding='SAME', name=name)
+            next_num = int(name.split('_')[-1])
+            current = tf.nn.conv2d(input=current, filter=[3, 3, num, next_num], strides=[1, 1, 1, 1], padding='SAME', name=name)
+            num = next_num
         elif layer_name == 'relu':
             current = tf.nn.relu(current, name=name)
         elif layer_name == 'pool':
-            num = int(name.split('_')[-1])
-            current = tf.nn.max_pool(current, ksize=[num, 2, 2, 1], strides=[1, 2, 2, 1], name=name)
+            next_num = int(name.split('_')[-1])
+            current = tf.nn.max_pool(current, ksize=[2, 2, num, next_num], strides=[1, 2, 2, 1], name=name)
+            num = next_num
         net[name] = current
     return net
 
 
 def loss_opt_function(image_net, labels):
     cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=image_net, labels=labels))
-    optimizer = tf.train.AdamOptimizer(learning_rate=0.5).minimize(cost)
-    return optimizer
+
+    return cost
+
+
+def VGG_Net(images,labels):
+    net = head_Net(images)
+    return loss_opt_function(net, labels)
 
 def main(unused):
     config = tf.ConfigProto(log_device_placement=True, allow_soft_placement=True)
+
     with tf.Graph().as_default() as graph:
         config.gpu_options.per_process_gpu_memory_fraction = 0.9  # 占用90%显存
+        gentfrecord = Gen_TFrecord()
+        gentfrecord.make_list_file("../data/DogsvsCats/train", "train.txt")
+        gentfrecord.generate_tfrecord_file("cat_dog.tfrecord")
+        dataset = gentfrecord.get_batch_dataset("cat_dog.tfrecord")
+        iterator = dataset.make_one_shot_iterator()
+        next_element = iterator.get_next()
+
         with tf.Session(config=config) as sess:
-            image_net = VGG_Net(images= )
-            opt = loss_opt_function(image_net['relu5_4'],labels=)
+
             step = 0
             while step < 10000:
-                step += 1
-                _, loss, acc = sess.run([opt, cost, accuracy])
-                if step % 1000 == 0:
-                    print("step:",loss, acc)
+                try:
+                    images, labels = sess.run(next_element)
+                    cost = VGG_Net(images, labels)
+                    optimizer = tf.train.AdamOptimizer(learning_rate=0.5).minimize(cost)
+                    step += 1
+                    _, loss, acc = sess.run([optimizer, cost])
+                    if step % 1000 == 0:
+                        print("step:", loss)
+
+                except tf.errors.OutOfRangeError:
+                    break
+
             print("training finish!")
+
+
+
 
 
 
