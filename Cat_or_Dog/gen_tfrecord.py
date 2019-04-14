@@ -20,7 +20,7 @@ class Gen_TFrecord:
                 label = 0
                 if "dog" == filename.split(".")[0]:
                     label = 1
-                imageslist.append(filename + "," + str(label)+"\n")
+                imageslist.append(os.path.join(dataset_dir, filename) + "," + str(label)+"\n")
         with open(self.trainfile,"w") as f:
             f.writelines(imageslist)
 
@@ -42,10 +42,8 @@ class Gen_TFrecord:
         self.tfrecord_file = tfrecord_file
         imagesandlabel = self.__load_and_shuffle_images_listfile(self.tfrecord_file)
         with tf.python_io.TFRecordWriter(self.tfrecord_file) as tfrecord_writer:
-            for filename, label in imagesandlabel:
-                if ""== filename or None == filename:
-                    break
-                image = cv2.imread(os.path.join(self.dataset_dir, filename))
+            for filepath, label in imagesandlabel:
+                image = cv2.imread(filepath)
                 example = tf.train.Example(features=tf.train.Features(feature={
                 'image_raw': tf.train.Feature(bytes_list=tf.train.BytesList(value=[image.tobytes()])),
                 'image_heigh': tf.train.Feature(int64_list =tf.train.Int64List(value=[image.shape[0]])),
@@ -74,26 +72,31 @@ class Gen_TFrecord:
         label = tf.cast(tf_record_features['image_label'], tf.int32)
         return image, label
 
+    def get_dataset(self, record_file, shuffle_size=50, repeat_size=1):
+        # 每次shuffle的大小
+        # 当repeat()中没有参数,表示无限的重复数据集（训练集中有55000个样本）.但repeat(2)时,相当于重复2遍数据集（即epoch=2)
+        # 这里选择无限重复数据集
+        dataset = tf.data.TFRecordDataset(record_file).map(self.__parse).shuffle(shuffle_size).repeat(repeat_size)
+        return dataset
 
-    def get_batch_dataset(self, record_file):
-        num_threads = tf.constant(5, dtype=tf.int32)
-    # num_parallel_calls用多个线程解析
-    # 每次shuffle的大小
-    # 当repeat()中没有参数,表示无限的重复数据集（训练集中有55000个样本）.但repeat(2)时,相当于重复2遍数据集（即epoch=2)
-    # 这里选择无限重复数据集
-    # batch(55)表示batch_size = 55
+    def get_batch_dataset(self, record_file, batch_size=32,shuffle_size=50, repeat_size=1):
+        # num_parallel_calls用多个线程解析
+        # 每次shuffle的大小
+        # 当repeat()中没有参数,表示无限的重复数据集（训练集中有55000个样本）.但repeat(2)时,相当于重复2遍数据集（即epoch=2)
+        # 这里选择无限重复数据集
+        # batch(55)表示batch_size = 55
+        num_threads = tf.constant(4, dtype=tf.int32)
         dataset = tf.data.TFRecordDataset(record_file).map(
-            self.__parse, num_parallel_calls=num_threads).shuffle(1000).repeat(2).batch(32)
-
+            self.__parse, num_parallel_calls=num_threads).shuffle(shuffle_size).repeat(repeat_size).batch(batch_size)
         return dataset
 
 
 if __name__ == '__main__':
 
     gentfrecord = Gen_TFrecord()
-    # gentfrecord.make_list_file("D:/Data/DogsvsCats/train","train.txt")
-    # gentfrecord.generate_tfrecord_file("cat_dog.tfrecord")
-    dataset = gentfrecord.get_batch_dataset("cat_dog.tfrecord")
+    gentfrecord.make_list_file("D:/Data/DogsvsCats/train","train.txt")
+    gentfrecord.generate_tfrecord_file("cat_dog.tfrecord")
+    dataset = gentfrecord.get_dataset("cat_dog.tfrecord")
 
     iterator = dataset.make_one_shot_iterator()
     next_element = iterator.get_next()
