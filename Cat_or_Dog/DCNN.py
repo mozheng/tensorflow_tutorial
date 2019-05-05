@@ -2,8 +2,11 @@ import tensorflow as tf
 from .gen_tfrecord import Gen_TFrecord
 
 
-FLAGS = tf.flags.FLAGS
-
+tf.flags.DEFINE_bool('debug', 'True', 'Debug mode: True/False' )
+tf.flags.DEFINE_integer('batchsize','8','trainning batchsize')    #参数 默认值  说明
+tf.flags.DEFINE_float('learning_rate','1e-4','learning_rate')
+tf.flags.DEFINE_bool('train', "True", "Debug mode: True/ False")
+FLAGS=tf.flags.FLAGS
 
 
 def head_Net(images):
@@ -54,9 +57,8 @@ def VGG_Net(images,labels):
 
 def main(unused):
     config = tf.ConfigProto(log_device_placement=True, allow_soft_placement=True)
-
     with tf.Graph().as_default() as graph:
-        config.gpu_options.per_process_gpu_memory_fraction = 0.9  # 占用90%显存
+        #config.gpu_options.per_process_gpu_memory_fraction = 0.9  # 占用90%显存
         gentfrecord = Gen_TFrecord()
         gentfrecord.make_list_file("../data/DogsvsCats/train", "train.txt")
         gentfrecord.generate_tfrecord_file("cat_dog.tfrecord")
@@ -75,7 +77,7 @@ def main(unused):
                     cost = VGG_Net(images, labels)
                     optimizer = tf.train.AdamOptimizer(learning_rate=0.5).minimize(cost)
                     step += 1
-                    _, loss, acc = sess.run([optimizer, cost])
+                    _, loss = sess.run([optimizer, cost])
                     if step % 1000 == 0:
                         print("step:", loss)
 

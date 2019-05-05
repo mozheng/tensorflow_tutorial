@@ -2,7 +2,6 @@ import os
 import tensorflow as tf
 import cv2
 import random
-import tensorflow.contrib.slim as slim
 
 
 class Gen_TFrecord:
@@ -64,6 +63,7 @@ class Gen_TFrecord:
 
         print("TFrecord file:" + self.tfrecord_file + "  is finished!")
 
+
     #### 下面是解析
     def __parse(self, example):
         tf_record_features = tf.parse_single_example(
@@ -84,16 +84,38 @@ class Gen_TFrecord:
         label = tf.cast(tf_record_features['image_label'], tf.int32)
         return image, label
 
+    def get_dataset(self, record_file, shuffle_size=50, repeat_size=1):
+        # 每次shuffle的大小
+        # 当repeat()中没有参数,表示无限的重复数据集（训练集中有55000个样本）.但repeat(2)时,相当于重复2遍数据集（即epoch=2)
+        # 这里选择无限重复数据集
+        dataset = tf.data.TFRecordDataset(record_file).map(self.__parse).shuffle(shuffle_size).repeat(repeat_size)
+        return dataset
 
-    def get_batch_dataset(self, record_file, shuffle_size=50, repeat_size=1, batch_size=32):
+
+    def get_batch_dataset(self, record_file, batch_size=32,shuffle_size=50, repeat_size=1):
         num_threads = tf.constant(1, dtype=tf.int32)
         # num_parallel_calls用多个线程解析
         # 每次shuffle的大小
         # 当repeat()中没有参数,表示无限的重复数据集（训练集中有55000个样本）.但repeat(2)时,相当于重复2遍数据集（即epoch=2)
         # 这里选择无限重复数据集
         # batch(55)表示batch_size = 55
+        num_threads = tf.constant(4, dtype=tf.int32)
         dataset = tf.data.TFRecordDataset(record_file).map(
             self.__parse, num_parallel_calls=num_threads).shuffle(shuffle_size).repeat(repeat_size).batch(batch_size)
-
         return dataset
+
+
+if __name__ == '__main__':
+
+    gentfrecord = Gen_TFrecord()
+    gentfrecord.make_list_file("D:/Data/DogsvsCats/train","train.txt")
+    gentfrecord.generate_tfrecord_file("cat_dog.tfrecord")
+    dataset = gentfrecord.get_dataset("cat_dog.tfrecord")
+
+    iterator = dataset.make_one_shot_iterator()
+    next_element = iterator.get_next()
+    with tf.Session() as sess:
+       sess.run(tf.global_variables_initializer())
+       sess.run(next_element)
+       print(next_element)
 

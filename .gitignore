@@ -1,5 +1,5 @@
 *.pyc
 .idea/*
 __pycache__/*
-dataset/
+data/
 *.tfrecord
