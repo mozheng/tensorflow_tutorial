@@ -1,7 +1,6 @@
 import tensorflow as tf
 from .gen_tfrecord import Gen_TFrecord
 
-tf.flags.DEFINE_bool('debug', 'True', 'Debug mode: True/False' )
 
 FLAGS = tf.flags.FLAGS
 
@@ -64,7 +63,9 @@ def main(unused):
         dataset = gentfrecord.get_batch_dataset("cat_dog.tfrecord")
         iterator = dataset.make_one_shot_iterator()
         next_element = iterator.get_next()
-
+        images = tf.placeholder(tf.float32, [None, 224, 224, 3])
+        labels = tf.placeholder(tf.float32, [None])
+        cost = VGG_Net(images, labels)
         with tf.Session(config=config) as sess:
 
             step = 0
