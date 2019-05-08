@@ -31,7 +31,7 @@ if __name__ == '__main__':
   # 创建一个会话sess
   with tf.Session() as sess:
     # 调用inputs_origin。cifar10_data/cifar-10-batches-bin是我们下载的数据的文件夹位置
-    reshaped_image = inputs_origin('../data/cifar10-batches-bin')
+    reshaped_image = inputs_origin('../dataset/cifar-10-batches-bin')
     # 这一步start_queue_runner很重要。
     # 我们之前有filename_queue = tf.train.string_input_producer(filenames)
     # 这个queue必须通过start_queue_runners才能启动
@@ -40,11 +40,11 @@ if __name__ == '__main__':
     # 变量初始化
     sess.run(tf.global_variables_initializer())
     # 创建文件夹cifar10_data/raw/
-    if not os.path.exists('../data/raw/'):
-      os.makedirs('../data/raw/')
+    if not os.path.exists('../dataset/raw/'):
+      os.makedirs('../dataset/raw/')
     # 保存30张图片
     for i in range(30):
       # 每次sess.run(reshaped_image)，都会取出一张图片
       image_array = sess.run(reshaped_image)
       # 将图片保存
-      scipy.misc.toimage(image_array).save('../data/raw/%d.jpg' % i)
+      scipy.misc.toimage(image_array).save('../dataset/raw/%d.jpg' % i)
