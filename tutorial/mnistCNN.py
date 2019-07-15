@@ -4,7 +4,7 @@ import numpy as np
 import tensorflow as tf
 
 
-(x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data(path="D:/GitHub/tensorflow_tutorial/data/mnist.npz")
+(x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data(path="D:/GitHub/tensorflow_tutorial/dataset/mnist.npz")
 
 def array_2_one_hot(arr,n=10):
     size= arr.shape[0]
